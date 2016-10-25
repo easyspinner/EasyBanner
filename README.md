@@ -2,6 +2,6 @@
 A banner which you can easily use.
 
 参考: https://github.com/bingoogolapple/BGABanner-Android <br>
-<&nbsp><&nbsp>https://github.com/saiwu-bigkoo/Android-ConvenientBanner
+      https://github.com/saiwu-bigkoo/Android-ConvenientBanner
 
 
