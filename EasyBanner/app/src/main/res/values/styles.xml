@@ -13,6 +13,12 @@
         <attr name="dotDrawable" format="reference"/>
         <attr name="interval" format="integer"/>
         <attr name="duration" format="integer"/>
+        <attr name="userScroll" format="boolean"/>
+        <attr name="dotPosition" format="enum">
+            <enum name="middle" value="0"/>
+            <enum name="left" value="1"/>
+            <enum name="right" value="2"/>
+        </attr>
 
     </declare-styleable>
 

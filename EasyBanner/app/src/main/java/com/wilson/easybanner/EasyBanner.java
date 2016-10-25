@@ -25,10 +25,21 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
     public static final int PAGE_SIZE = 5;
 
     public static final int MSG_AUTO_SCROLL = 0x10;
+
+    //indicator position 指示点的位置
+    public static final int DOT_MIDDLE = 0;
+    public static final int DOT_LEFT = 1;
+    public static final int DOT_RIGHT = 2;
+
+    private int mIndicatorGravity = DOT_MIDDLE;
+
     private boolean mIsUserCanScroll = true;
+
     private boolean mAutoScroll = true;
+
     private int mPageDuration = 3000; //单页驻留时间
-    private int mPageChangeInterval = 800; //
+
+    private int mPageChangeInterval = 800; //翻页速度
 
     private int mDotDrawable = R.drawable.banner_dot_selector;
 
@@ -37,8 +48,6 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
     private SparseArray<ImageView> mCachedViews = new SparseArray<>();
 
     private EasyAdapter mAdapterListener;
-
-    private List<? extends Object> mModels;
 
     private LinearLayout mIndicatorLayout;
 
@@ -66,6 +75,8 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
         mAutoScroll = ta.getBoolean(R.styleable.EasyBanner_autoPlay, mAutoScroll);
         mPageDuration = ta.getInt(R.styleable.EasyBanner_duration, mPageDuration);
         mPageChangeInterval = ta.getInt(R.styleable.EasyBanner_interval,mPageChangeInterval);
+        mIsUserCanScroll = ta.getBoolean(R.styleable.EasyBanner_userScroll,mIsUserCanScroll);
+        mIndicatorGravity = ta.getInt(R.styleable.EasyBanner_dotPosition,mIndicatorGravity);
 
         ta.recycle();
 
@@ -73,11 +84,25 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
 
     private void initIndicators(){
 
+        if(mCachedViews.size()<2) return;
+
         RelativeLayout relativeLayout = new RelativeLayout(getContext());
         RelativeLayout.LayoutParams rlParams = new LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
-        rlParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
         rlParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        switch (mIndicatorGravity){
+
+            case DOT_LEFT:
+                rlParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                break;
+            case DOT_RIGHT:
+                rlParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                break;
+            default:
+                rlParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                break;
+
+        }
         rlParams.setMargins(20,0,20,20);
         addView(relativeLayout,rlParams);
 
@@ -92,14 +117,14 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
         LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         dotParams.setMargins(10,10,0,0);
-        for(int i = 0 ;i<mModels.size();i++)
+        for(int i = 0 ;i<mCachedViews.size();i++)
         {
             dotView = new ImageView(getContext());
             dotView.setLayoutParams(dotParams);
             dotView.setBackgroundResource(R.drawable.banner_dot_selector);
             mIndicatorLayout.addView(dotView);
         }
-        changeDot(0);
+        changeIndicatorPosition(0);
 
     }
 
@@ -115,32 +140,55 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
                 ViewGroup.LayoutParams.MATCH_PARENT));
         if(mAutoScroll){
             int startItem = Integer.MAX_VALUE - Integer.MAX_VALUE%mCachedViews.size();
-            mViewPager.setCurrentItem(0,true);
+//            mViewPager.setCurrentItem(0,true);
             startAutoScroll();
         }else
-            changeDot(0);
+            changeIndicatorPosition(0);
 
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stopAutoScroll();
+    }
 
+    @Deprecated
     public void setDatas(List<? extends Object> dataSource)
     {
         ImageView imageView;
         LinearLayout.LayoutParams lyParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
-        mModels = dataSource;
         for(int i = 0;i<dataSource.size();i++)
         {
             imageView = new ImageView(getContext());
             imageView.setLayoutParams(lyParams);
             mCachedViews.append(i,imageView);
         }
+        if(mCachedViews.size()<2) mAutoScroll = false;
         initViewPagers();
         initIndicators();
     }
 
+    public void setPageSize(int pages){
+        ImageView imageView;
+        LinearLayout.LayoutParams lyParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        for(int i = 0;i<pages;i++)
+        {
+            imageView = new ImageView(getContext());
+            imageView.setLayoutParams(lyParams);
+            mCachedViews.append(i,imageView);
+        }
+        if(mCachedViews.size()<2) mAutoScroll = false;
+        initViewPagers();
+        initIndicators();
 
-    private void changeDot(int position)
+
+    }
+
+
+    private void changeIndicatorPosition(int position)
     {
         if(mIndicatorLayout!=null && mCachedViews!=null){
             for(int i = 0;i<mIndicatorLayout.getChildCount();i++)
@@ -162,8 +210,15 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
 
     public void startAutoScroll(){
 
-        mHandler.sendEmptyMessageDelayed(MSG_AUTO_SCROLL, mPageDuration);
+        if(mCachedViews.size()>1)
+         mHandler.sendEmptyMessageDelayed(MSG_AUTO_SCROLL, mPageDuration);
 
+    }
+
+    public void stopAutoScroll(){
+        if(mAutoScroll){
+            mHandler.removeMessages(MSG_AUTO_SCROLL);
+        }
     }
 
     public void setAdapterListener(EasyAdapter adapter){
@@ -177,7 +232,7 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
 
     @Override
     public void onPageSelected(int position) {
-        changeDot(position%mCachedViews.size());
+        changeIndicatorPosition(position%mCachedViews.size());
     }
 
     @Override
@@ -197,7 +252,7 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
                 container.removeView(view);
             }
             if(mAdapterListener!=null)
-                mAdapterListener.fillBannerItem(EasyBanner.this,view,mModels == null?null:mModels.get(realPosition),realPosition);
+                mAdapterListener.fillBannerItem(EasyBanner.this,view,realPosition);
             container.addView(view);
             return view;
         }
@@ -224,7 +279,7 @@ public class EasyBanner extends RelativeLayout implements ViewPager.OnPageChange
     }
 
     public interface EasyAdapter {
-        void fillBannerItem(EasyBanner banner, View view, Object model, int position);
+        void fillBannerItem(EasyBanner banner, View view, int position);
     }
 
     public interface OnInterceptScrollEvent{

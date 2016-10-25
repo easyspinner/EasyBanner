@@ -2,14 +2,12 @@ package com.wilson.easybanner;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements EasyBanner.EasyAdapter{
@@ -25,7 +23,7 @@ public class MainActivity extends AppCompatActivity implements EasyBanner.EasyAd
             "http://img3.iqilu.com/data/attachment/forum/201308/21/192654ai88zf6zaa60zddo.jpg"};
 
     private int[] imgs2 = {R.drawable.pic1,R.drawable.pic2,
-                          R.drawable.pic3,R.drawable.pic4,
+            R.drawable.pic3,R.drawable.pic4,
             R.drawable.pic5};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +41,13 @@ public class MainActivity extends AppCompatActivity implements EasyBanner.EasyAd
             mModels.add(res);
         }
         mBanner.setAdapterListener(this);
-//        mBanner.setDatas(mModels);
-        mBanner.setDatas(Arrays.asList(imgs));
+        mBanner.setPageSize(imgs2.length);
+//        mBanner.setDatas(Arrays.asList(imgs));
     }
 
     @Override
-    public void fillBannerItem(EasyBanner banner, View view, Object model, int position) {
-        Log.d("EasyBanner","fillBannerItem:"+(String) model);
+    public void fillBannerItem(EasyBanner banner, View view, int position) {
+//        Log.d("EasyBanner","fillBannerItem:"+(String) model);
         Glide.with(MainActivity.this)
                 .load(imgs2[position])
                 .centerCrop()
